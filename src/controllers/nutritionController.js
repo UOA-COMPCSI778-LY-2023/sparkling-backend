@@ -4,28 +4,29 @@ const nutritionService = require('../services/nutritionService')
 class NutritioController{
     async addPackagedFood(req, res){
         try{
-            const newPackagedFood= new PackagedFood(req.body);
-            const result = await nutritionService.addPackagedFood(newPackagedFood);
-            if(result.success){
-                res.status(200).json({message: "Add packaged food success!"})
+            const newFood= req.body;
+            const result = await nutritionService.addPackagedFood(newFood);
+            if(result.success === true){
+                res.status(200).json({ack: 'success', status: 200, message: "Add packaged food success!"})
             }else{
-                    res.status(400).json({ message: "Add packaged food failed!" });
+                    res.status(409).json({ack: 'failure', status: 409, errorCode: "FOOD_ALREADY_EXISTS",  message: result.message});
                   }
         }catch(error){
-            res.status(500).json({message: "Error adding new packaged food!", error });
+            res.status(500).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in adding new packaged food!"});
         }
     }
 
     async getPackagedFood(req, res){
         try {
             const code = req.params.code;
-            const packagedFood = await nutritionService.getPackagedFood(code);
-            if (!packagedFood || packagedFood.length === 0) {
-                return res.status(404).json({ message: "Packaged food not found!" });   
-            }
-            res.status(200).json(packagedFood);               
+            const result = await nutritionService.getPackagedFood(code);
+            if (result.success === true) {
+                res.status(200).json({ack: 'success', status: 200, data: result.data});  
+            }else{
+                return res.status(404).json({ack: 'failure', status: 404, errorCode: "FOOD_NOT_FOUND",  message: result.message}); 
+            }           
         }catch(error){
-            res.status(500).json({message: "Error getting packaged food information!", error });
+            res.status(500).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting packaged food information!"});
         }
     }
 }
