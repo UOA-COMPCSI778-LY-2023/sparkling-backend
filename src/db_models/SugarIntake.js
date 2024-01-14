@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 
 const sugarIntakeSchema = new mongoose.Schema({
   user: {
@@ -6,8 +7,8 @@ const sugarIntakeSchema = new mongoose.Schema({
     ref: 'User'
   },
   date: {
-    type: Date, 
-    default: Date.now
+    type: String,
+    default: () => moment().tz("Pacific/Auckland").format()
   },
   sugar: {
     type: Number, 

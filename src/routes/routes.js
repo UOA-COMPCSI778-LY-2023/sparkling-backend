@@ -18,7 +18,7 @@ router.get('/users/:username/scan-records', userController.getScanRecords);
 router.post('/users/create', userController.createUser);
 router.get('/packaged-food/:code', nutritionController.getPackagedFood);
 router.post('/packaged-food', nutritionController.addPackagedFood); 
-router.get('/users/:username/intake-recommendation', userController.getInatkeRecommendation); 
+router.get('/users/:username/intake-prediction', userController.getInatkePrediction); 
 router.get('/users/:username/target', userController.getSurgarTarget); 
 
 module.exports = router;

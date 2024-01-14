@@ -4,6 +4,9 @@ const PackagedFood = require('../db_models/PackagedFood');
 const SugarIntake = require('../db_models/SugarIntake');
 const User = require('../db_models/User');
 const Utils = require('./utils');
+const { MongoCursorInUseError } = require('mongodb');
+const moment = require('moment-timezone');
+const utils = require('./utils');
 
 class SugarIntakeService {
   
@@ -14,8 +17,8 @@ class SugarIntakeService {
         return {success: false, message: 'User does not exist!'}
       }
       const user_id = user._id;
-      const date = new Date();
-      const totalSugar = await Utils.returnSugarIntakeByDay(user_id, date);
+      const dateNZ = moment().tz("Pacific/Auckland").startOf('day').format();
+      const totalSugar = await Utils.returnSugarIntakeByDay(user_id, dateNZ);
       return {success: true, sugar: totalSugar};     
     }catch(error){
       console.error('Error in getting suagr intake today!', error);
@@ -23,7 +26,7 @@ class SugarIntakeService {
     }
   }
 
-  async getLastNDaysIntake(username, date, days) {
+  async getLastNDaysIntake(username, days) {
     try{
       const user = await User.findOne({username: username}).select('_id');
       if(!user){
@@ -31,11 +34,11 @@ class SugarIntakeService {
       }
       const user_id = user._id;
       let dailyIntakes = [];
+
       for(let i=0; i<days; i++){
-        let day = new Date();
-        day.setDate(day.getDate() - i);
-        const sugar = await Utils.returnSugarIntakeByDay(user_id, day);
-        dailyIntakes.push({date: day, sugarIntake: sugar});
+        let dayNZ = moment().tz("Pacific/Auckland").startOf('day').subtract(i, 'days').format();
+        const sugar = await Utils.returnSugarIntakeByDay(user_id, dayNZ);
+        dailyIntakes.push({date: dayNZ, sugarIntake: sugar});
       };
       return {success: true, dailyIntakes};
     }catch(error){
@@ -77,15 +80,14 @@ class SugarIntakeService {
       } 
       const user_id = user._id;
       
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(startOfDay);
-      endOfDay.setDate(endOfDay.getDate() + 1);
+      const startOfDay = moment().tz("Pacific/Auckland").startOf('day').format();
+      const endOfDay = moment().tz("Pacific/Auckland").endOf('day').format();
 
       const list = await SugarIntake.find({
         user: user_id, 
         date: { $gte: startOfDay, $lt: endOfDay }
       }).populate('food');
+
       const newList = list.map(item => ({
         ...item.toObject(),
         food: item.food.code  
@@ -112,64 +114,52 @@ class SugarIntakeService {
   }
 
 
-//Plan_1: Recommendation by sort
-  async foodRecommendation(username){
+//Plan_1: Prediction by sort all intake records
+  async foodPrediction(username){
     try{    
       const user = await User.findOne({username: username}).select('_id');
       if(!user){
         return {success: false, message: 'User does not exist!'}
       }
       const user_id = user._id;
-      const foodList = await this.getTopInatkeFoodIds(user_id);
-      const foodAndServingPromise = foodList.map(food_id => this.getMostFrequentServingCount(user_id,food_id));
-      const recommendFoodAndServingCount = await Promise.all(foodAndServingPromise);
-      if(recommendFoodAndServingCount.length==0){
-        throw new Error('No availiable user intake hostory!');
-      }
-      return {success: true, recommendations: recommendFoodAndServingCount};
+      const result = await utils.getTopInatkeFoodIds(user_id);
+      if(result.success === false){
+        return {success: false, message: result.message };
+      }else{
+        const foodAndServingPromise = result.foodlist.map(food_id => utils.getMostFrequentServingCount(user_id,food_id));
+        const recommendFoodAndServingCount = await Promise.all(foodAndServingPromise);
+        return {success: true, predictions: recommendFoodAndServingCount};
+    }
     }catch(error){
-      console.error('Error in getMostFrequentServingCount', error);
+      console.error('Error in getting food prediction!', error);
       throw error;
     }
   }
 
-  async getTopInatkeFoodIds(user_id){
-    try{
-      const result = await SugarIntake.aggregate([
-        {$match: {user: new mongoose.Types.ObjectId(user_id)}},
-        {$group: {_id: '$food', frequency: {$sum: 1}}},
-        {$sort: {frequency: -1}},
-        {$limit: 5},
-        { $project: { _id: 1 } }
-      ]);
-      return result.map(item => item._id);
-    }catch(error){
-      console.error('Error in getTopFoodsByUser:', error);
-      throw error;
-    }
-  }
-  async getMostFrequentServingCount(user_id, food_id){
-    try{
-      const result = await SugarIntake.aggregate([
-        {$match: {user: new mongoose.Types.ObjectId(user_id), food: new mongoose.Types.ObjectId(food_id)}},
-        {$group: {_id: '$serving_count', frequency: {$sum: 1}}},
-        {$sort: {frequency: -1}},
-        {$limit: 1},
-        { $project: { _id: 0, mostFrequentServingCount: '$_id', food: new mongoose.Types.ObjectId(food_id) } }
-      ]);
-
-      if (result.length === 0) {
-        throw new Error('User and food record not exist!');
+  //Plan_2: Prediction by sort time interval intake records - based on(3 hours interval, 8 intervals one day)
+  async foodPrediction_byTime(username){
+    try{    
+      const user = await User.findOne({username: username}).select('_id');
+      if(!user){
+        return {success: false, message: 'User does not exist!'}
       }
-      return {
-        food_id: food_id,
-        mostFrequentServingCount: result[0].mostFrequentServingCount
-      };
+      const user_id = user._id;
+      const foodList_intervals = await utils.getTopIntakesList_byTimeIntervals(user_id);
+      const foodListCurrent= await utils.getTopIntakeFoodIds_CurrentInterval(foodList_intervals);
+
+      if(foodListCurrent.length > 0){
+        const foodAndServingPromise = foodListCurrent.map(food_id => utils.getMostFrequentServingCount(user_id,food_id));
+        const recommendFoodAndServingCount = await Promise.all(foodAndServingPromise);
+        return {success: true, predictions: recommendFoodAndServingCount};
+      }else{
+          return { success: false, message: "No food data available for this time interval." }
+      }
     }catch(error){
-      console.error('Error in getFoodServingCount', error);
+      console.error('Error in getting food prediction!', error);
       throw error;
     }
   }
+
 }
 
 module.exports = new SugarIntakeService();

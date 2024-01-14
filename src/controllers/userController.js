@@ -22,8 +22,7 @@ class UserController{
     try {
       const username = req.params.username;
       const days = parseInt(req.params.lastNDays, 10);
-      const today = new Date();
-      const result = await sugarIntakeService.getLastNDaysIntake(username, today, days);
+      const result = await sugarIntakeService.getLastNDaysIntake(username, days);
       if(result.success == true){
         res.status(200).json({user: username, report: result.dailyIntakes});
       }else{
@@ -148,17 +147,17 @@ class UserController{
     }
   }
 
-  async getInatkeRecommendation(req, res){
+  async getInatkePrediction(req, res){
     const username = req.params.username;
     try {
-      const result = await sugarIntakeService.foodRecommendation(username);
+      const result = await sugarIntakeService.foodPrediction_byTime(username);
       if(result.success == true){
-        res.status(200).json({username: username, recommendations: result.recommendations});
+        res.status(200).json({username: username, predictions: result.predictions});
       }else{
         res.status(404).json({ message: result.message});
       }
     } catch (error) {
-      res.status(500).json({message: "Error in getting intake recommendation!"});
+      res.status(500).json({message: "Error in getting intake predictions!"});
     }
   }
 }

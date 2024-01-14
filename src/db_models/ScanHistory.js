@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 
 const scanHistorySchema = new mongoose.Schema({
   user: {
@@ -12,8 +13,8 @@ const scanHistorySchema = new mongoose.Schema({
     required: true
   },
   scannedAt: {
-    type: Date,
-    default: Date.now
+    type: String,
+    default: () => moment().tz("Pacific/Auckland").format()
   },
 });
 

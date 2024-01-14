@@ -49,8 +49,6 @@ class UserService{
         try {
             const user = await User.findOne({username: username});
             const food = await PackagedFood.findOne({code: code});
-            // console.log(food);
-            // console.log(food._id);
             if (!user || !food) {
                 return {success: false, message: 'User or food does not exist!'};
               }
