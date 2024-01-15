@@ -108,8 +108,9 @@ class Utils{
       if (result.length === 0) {
         throw new Error('User and food record not exist!');
       }
+      const food = await PackagedFood.findById(food_id);
       return {
-        food_id: food_id,
+        food: food,
         mostFrequentServingCount: result[0].mostFrequentServingCount
       };
     }catch(error){
