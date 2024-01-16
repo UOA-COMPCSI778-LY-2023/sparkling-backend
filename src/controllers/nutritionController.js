@@ -9,10 +9,10 @@ class NutritioController{
             if(result.success === true){
                 res.status(200).json({ack: 'success', status: 200, message: "Add packaged food success!"})
             }else{
-                    res.status(409).json({ack: 'failure', status: 409, errorCode: "FOOD_ALREADY_EXISTS",  message: result.message});
+                    res.status(200).json({ack: 'failure', status: 409, errorCode: "FOOD_ALREADY_EXISTS",  message: result.message});
                   }
         }catch(error){
-            res.status(500).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in adding new packaged food!"});
+            res.status(200).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in adding new packaged food!"});
         }
     }
 
@@ -23,10 +23,10 @@ class NutritioController{
             if (result.success === true) {
                 res.status(200).json({ack: 'success', status: 200, data: result.data});  
             }else{
-                return res.status(404).json({ack: 'failure', status: 404, errorCode: "FOOD_NOT_FOUND",  message: result.message}); 
+                return res.status(200).json({ack: 'failure', status: 404, errorCode: "FOOD_NOT_FOUND",  message: result.message}); 
             }           
         }catch(error){
-            res.status(500).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting packaged food information!"});
+            res.status(200).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting packaged food information!"});
         }
     }
 }
