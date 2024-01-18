@@ -89,6 +89,20 @@ class UserController{
       res.status(200).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting intake list!"});
     }
   }
+  async listSurgarIntakesLastWeek(req, res){
+    try{
+      const username = req.params.username;  
+      const result = await sugarIntakeService.getIntakesListLastWeek(username);
+
+      if (result.success == true) {
+      res.status(200).json({ack: 'success', status: 200, username: username, list: result.list});
+      }else{
+        res.status(200).json({ack: 'failure', status: 404, errorCode: "RESOURCE_NOT_FOUND", message: result.message});
+      }
+    }catch (error) {
+      res.status(200).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting intake list!"});
+    }
+  }
 
   async removeSurgarIntake(req, res){ 
     try{

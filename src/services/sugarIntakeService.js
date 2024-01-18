@@ -71,6 +71,34 @@ class SugarIntakeService {
       throw error;
     }
   }
+  async getIntakesListLastWeek(username){
+    try{
+      const user = await User.findOne({username: username}).select('_id');
+      if(!user){
+        return {success: false, message: 'User does not exist!'}
+      } 
+      const user_id = user._id;
+      const now = moment().tz("Pacific/Auckland").format();
+      const startOfDay = moment(now).subtract(8, 'days').startOf('day').format();
+      const endOfDay = moment(now).subtract(1, 'day').endOf('day').format();
+
+      const list = await SugarIntake.find({
+        user: user_id, 
+        date: { $gte: startOfDay, $lt: endOfDay }
+      }).populate('food');
+
+      const newList = list.map(item => ({
+        ...item.toObject(),
+        food: item.food.code  
+      }));
+
+      const resultList = await Utils.removeSameCodeAndServing(newList);
+      return{success: true, list: resultList}
+    }catch(error){
+      console.error('Error in getting weekly intake list!', error);
+      throw error;
+    }
+  }
 
   async getIntakesListToday(username){
     try{
@@ -94,10 +122,11 @@ class SugarIntakeService {
       }));
       return{success: true, list: newList}
     }catch(error){
-      console.error('Error in adding suagr intake', error);
+      console.error('Error in getting intake list today!', error);
       throw error;
     }
   }
+
   async removeSugarIntake(username, record_id){
     try{
       const user = await User.findOne({username: username});
