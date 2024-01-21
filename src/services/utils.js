@@ -157,16 +157,5 @@ class Utils{
     else if (hour < 21) return '6';
     else return '7';
   }
-  async removeSameCodeAndServing(list){
-    const resultList = list.reduce((acc, item) => {    
-      const keyCombo = `${item.food}_${item.serving_count}`;
-      if(!acc[keyCombo]){
-      acc[keyCombo] = item;
-      }
-    return acc;
-    },{});
-    const filteredList = Object.values(resultList);
-    return filteredList;
-  }
 }
 module.exports = new Utils();

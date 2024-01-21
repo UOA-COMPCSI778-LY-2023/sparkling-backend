@@ -82,18 +82,18 @@ class SugarIntakeService {
       const startOfDay = moment(now).subtract(8, 'days').startOf('day').format();
       const endOfDay = moment(now).subtract(1, 'day').endOf('day').format();
 
-      const list = await SugarIntake.find({
-        user: user_id, 
-        date: { $gte: startOfDay, $lt: endOfDay }
-      }).populate('food');
+      const intakeList = await SugarIntake.aggregate([
+        {$match: {user: user_id, date: { $gte: startOfDay, $lt: endOfDay }}},
+        {$group: {_id: '$food', frequency: {$sum: 1}}},
+        {$sort: {frequency: -1}},
+      ]);
 
-      const newList = list.map(item => ({
-        ...item.toObject(),
-        food: item.food.code  
+      const result = await SugarIntake.populate(intakeList, {path: '_id', model: 'PackagedFood'});
+      const finalResult = result.map(item => ({
+        food: item._id,
+        frequency: item.frequency
       }));
-
-      const resultList = await Utils.removeSameCodeAndServing(newList);
-      return{success: true, list: resultList}
+      return{success: true, list: finalResult}
     }catch(error){
       console.error('Error in getting weekly intake list!', error);
       throw error;
