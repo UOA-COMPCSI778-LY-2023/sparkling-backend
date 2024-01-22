@@ -116,11 +116,11 @@ class SugarIntakeService {
         date: { $gte: startOfDay, $lt: endOfDay }
       }).populate('food');
 
-      const newList = list.map(item => ({
-        ...item.toObject(),
-        food: item.food.code  
-      }));
-      return{success: true, list: newList}
+      // const newList = list.map(item => ({
+      //   ...item.toObject(),
+      //   food: item.food.code  
+      // }));
+      return{success: true, list: list}
     }catch(error){
       console.error('Error in getting intake list today!', error);
       throw error;
