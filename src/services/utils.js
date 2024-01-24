@@ -37,7 +37,7 @@ class Utils{
             if(!foodItem){
                 throw new Error('Food item not found!');
             }
-            const sugarsServing = foodItem.nutriments && foodItem.nutriments.sugars_serving;
+            const sugarsServing = foodItem.nutriments && foodItem.nutriments.Sugars;
             if (sugarsServing === undefined) {
               throw new Error('Sugar serving data not available for this food item');
             }
@@ -121,7 +121,11 @@ class Utils{
 
   async getTopIntakesList_byTimeIntervals(user_id){
     try{
-        const intakes = await SugarIntake.find({user: new mongoose.Types.ObjectId(user_id)});
+        const now = moment().tz("Pacific/Auckland").format();
+        const dateEndYesterday = moment(now).tz("Pacific/Auckland").subtract(1, 'days').endOf('day').format();
+
+        const intakes = await SugarIntake.find({user: new mongoose.Types.ObjectId(user_id), date: {$lte: dateEndYesterday}});
+        console.log(intakes);
         let intervalIntakes = {'0': [], '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': []};
         for(let intake of intakes){ 
             const hour = moment(intake.date).tz("Pacific/Auckland").hour();  

@@ -47,7 +47,7 @@ class SugarIntakeService {
     }
 }  
 
-  async addSugarIntake(username, code, serving_count){
+  async addSugarIntake(username, code, serving_count, date){
     try{
       const user = await User.findOne({username: username});
       const food = await PackagedFood.findOne({code: code});
@@ -58,11 +58,13 @@ class SugarIntakeService {
       const user_id = await Utils.getUserIdbyName(username);
       const sugar = await Utils.calculateIntakeSugar(food_id, serving_count);
 
+
       const sugarIntake = new SugarIntake({
         user: user_id,
         sugar: sugar,
         food: food_id,
         serving_count: serving_count,
+        date: date,
       });
       await sugarIntake.save();
       return{success: true}
