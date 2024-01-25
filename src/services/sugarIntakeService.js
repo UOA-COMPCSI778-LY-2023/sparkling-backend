@@ -58,7 +58,6 @@ class SugarIntakeService {
       const user_id = await Utils.getUserIdbyName(username);
       const sugar = await Utils.calculateIntakeSugar(food_id, serving_count);
 
-
       const sugarIntake = new SugarIntake({
         user: user_id,
         sugar: sugar,
@@ -66,6 +65,7 @@ class SugarIntakeService {
         serving_count: serving_count,
         date: date,
       });
+      console.log(sugarIntake)
       await sugarIntake.save();
       return{success: true}
     }catch(error){

@@ -1,6 +1,7 @@
 const sugarIntakeService = require('../services/sugarIntakeService');
 const userService = require('../services/userService');
 const User = require('../db_models/User');
+const moment = require('moment-timezone');
 
 class UserController{
 
@@ -63,7 +64,10 @@ class UserController{
 
   async addSurgarIntake(req, res){
     try{
-      const {username, code, serving_count, date} = req.body;  
+      let {username, code, serving_count, date} = req.body;  
+      if(!date){
+        date = moment().tz("Pacific/Auckland").format()
+      }
       const result = await sugarIntakeService.addSugarIntake(username, code, serving_count, date);
       if (result.success == true) {
       res.status(200).json({ack: 'success', status: 200, message: "Add sugar intake success!"});
