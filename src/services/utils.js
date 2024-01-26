@@ -161,5 +161,9 @@ class Utils{
     else if (hour < 21) return '6';
     else return '7';
   }
+
+  async getFoodDetailById(food_id){
+    return PackagedFood.findById(food_id);
+  }
 }
 module.exports = new Utils();

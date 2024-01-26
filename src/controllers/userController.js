@@ -2,6 +2,7 @@ const sugarIntakeService = require('../services/sugarIntakeService');
 const userService = require('../services/userService');
 const User = require('../db_models/User');
 const moment = require('moment-timezone');
+const apiService = require('../services/apiService');
 
 class UserController{
 
@@ -172,6 +173,24 @@ class UserController{
         res.status(200).json({ack: 'success', status: 200, username: username, predictions: result.predictions});
       }else{
         res.status(200).json({ack: 'failure', status: 404, errorCode: "RESOURCE_NOT_FOUND",  message: result.message});
+      }
+    } catch (error) {
+      res.status(200).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting intake predictions!"});
+    }
+  }
+
+  async getInatkeModelPrediction(req, res){
+    const username = req.params.username;
+    try {
+      const user = await User.findOne({username: username});
+      if (!user) {
+        return res.status(200).json({ack: 'failure', status: 404, errorCode: "RESOURCE_NOT_FOUND",  message: result.message});
+      }
+      const user_id = user._id;
+      const result = await apiService.getInatkeModelPrediction(user_id)
+
+      if(result.success == true){
+        res.status(200).json({ack: 'success', status: 200, username: username, predictions: result.predictions});
       }
     } catch (error) {
       res.status(200).json({ack: 'failure', status: 500, errorCode: "INTERNAL_SERVICE_ERROR", message: "Error in getting intake predictions!"});

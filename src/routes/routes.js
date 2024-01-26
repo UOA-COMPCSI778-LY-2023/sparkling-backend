@@ -21,6 +21,7 @@ router.get('/packaged-food/:code', nutritionController.getPackagedFood);
 router.post('/packaged-food', nutritionController.addPackagedFood); 
 router.get('/users/:username/intake-prediction', userController.getInatkePrediction); 
 router.get('/users/:username/target', userController.getSurgarTarget); 
+router.get('/users/:username/intake-model-prediction', userController.getInatkeModelPrediction); 
 
 
 module.exports = router;
