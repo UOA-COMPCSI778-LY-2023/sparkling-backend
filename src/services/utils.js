@@ -125,7 +125,7 @@ class Utils{
         const dateEndYesterday = moment(now).tz("Pacific/Auckland").subtract(1, 'days').endOf('day').format();
 
         const intakes = await SugarIntake.find({user: new mongoose.Types.ObjectId(user_id), date: {$lte: dateEndYesterday}});
-        console.log(intakes);
+        // console.log(intakes);
         let intervalIntakes = {'0': [], '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': []};
         for(let intake of intakes){ 
             const hour = moment(intake.date).tz("Pacific/Auckland").hour();  
@@ -151,6 +151,7 @@ class Utils{
     let interval = this.determineInterval(hour);
     return foodList[interval].foodlist;
   }
+
   determineInterval(hour) {
     if (hour < 3) return '0';
     else if (hour < 6) return '1';

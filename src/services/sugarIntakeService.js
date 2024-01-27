@@ -177,6 +177,7 @@ class SugarIntakeService {
       const user_id = user._id;
       const foodList_intervals = await utils.getTopIntakesList_byTimeIntervals(user_id);
       const foodListCurrent= await utils.getTopIntakeFoodIds_CurrentInterval(foodList_intervals);
+      // console.log(foodListCurrent)
 
       if(foodListCurrent.length > 0){
         const foodAndServingPromise = foodListCurrent.map(food_id => utils.getMostFrequentServingCount(user_id,food_id));
