@@ -77,19 +77,19 @@ class Utils{
         }
     }
 
-  async getTopInatkeFoodIds(user_id){
+  async getTopInatkeFoodIds(user_id, number){
     try{
       const result = await SugarIntake.aggregate([
         {$match: {user: new mongoose.Types.ObjectId(user_id)}},
         {$group: {_id: '$food', frequency: {$sum: 1}}},
         {$sort: {frequency: -1}},
-        {$limit: 5},
+        {$limit: number},
         { $project: { _id: 1 } }
       ]);
       if(result.length ===0){
-        return {success: false, message: "No food data available."}
+        return null;
       }
-      return {success: true, foodlist: result.map(item => item._id)};
+      return {foodlist: result.map(item => item._id)};
     }catch(error){
       console.error('Error in getTopFoodsByUser', error);
       throw error;
@@ -97,6 +97,7 @@ class Utils{
   }
   async getMostFrequentServingCount(user_id, food_id){
     try{
+      // console.log(food_id);
       const result = await SugarIntake.aggregate([
         {$match: {user: new mongoose.Types.ObjectId(user_id), food: new mongoose.Types.ObjectId(food_id)}},
         {$group: {_id: '$serving_count', frequency: {$sum: 1}}},

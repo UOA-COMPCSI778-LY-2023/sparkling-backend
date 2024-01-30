@@ -146,26 +146,26 @@ class SugarIntakeService {
 
 
 //Plan_1: Prediction by sort all intake records
-  async foodPrediction(username){
-    try{    
-      const user = await User.findOne({username: username}).select('_id');
-      if(!user){
-        return {success: false, message: 'User does not exist!'}
-      }
-      const user_id = user._id;
-      const result = await utils.getTopInatkeFoodIds(user_id);
-      if(result.success === false){
-        return {success: false, message: result.message };
-      }else{
-        const foodAndServingPromise = result.foodlist.map(food_id => utils.getMostFrequentServingCount(user_id,food_id));
-        const recommendFoodAndServingCount = await Promise.all(foodAndServingPromise);
-        return {success: true, predictions: recommendFoodAndServingCount};
-    }
-    }catch(error){
-      console.error('Error in getting food prediction!', error);
-      throw error;
-    }
-  }
+  // async foodPrediction(username){
+  //   try{    
+  //     const user = await User.findOne({username: username}).select('_id');
+  //     if(!user){
+  //       return {success: false, message: 'User does not exist!'}
+  //     }
+  //     const user_id = user._id;
+  //     const result = await utils.getTopInatkeFoodIds(user_id, 5);
+  //     if(result.success === false){
+  //       return {success: false, message: result.message };
+  //     }else{
+  //       const foodAndServingPromise = result.foodlist.map(food_id => utils.getMostFrequentServingCount(user_id,food_id));
+  //       const recommendFoodAndServingCount = await Promise.all(foodAndServingPromise);
+  //       return {success: true, predictions: recommendFoodAndServingCount};
+  //   }
+  //   }catch(error){
+  //     console.error('Error in getting food prediction!', error);
+  //     throw error;
+  //   }
+  // }
 
   //Plan_2: Prediction by sort time interval intake records - based on(3 hours interval, 8 intervals one day)
   async foodPrediction_byTime(username){
@@ -176,9 +176,19 @@ class SugarIntakeService {
       }
       const user_id = user._id;
       const foodList_intervals = await utils.getTopIntakesList_byTimeIntervals(user_id);
-      const foodListCurrent= await utils.getTopIntakeFoodIds_CurrentInterval(foodList_intervals);
-      // console.log(foodListCurrent)
+      let foodListCurrent= await utils.getTopIntakeFoodIds_CurrentInterval(foodList_intervals);
 
+      if(foodListCurrent.length<5){
+        const n = 5 - foodListCurrent.length;
+        const response = await utils.getTopInatkeFoodIds(user_id, n);
+        if(response&&response.foodlist){
+          const foodListSec = response.foodlist;
+          const foodListSecStrings = foodListSec.map(foodIdObj => foodIdObj.toString());
+          foodListCurrent = foodListCurrent.concat(foodListSecStrings);
+          foodListCurrent = [...new Set(foodListCurrent)];
+        }
+      }
+      // console.log(foodListCurrent)
       if(foodListCurrent.length > 0){
         const foodAndServingPromise = foodListCurrent.map(food_id => utils.getMostFrequentServingCount(user_id,food_id));
         const recommendFoodAndServingCount = await Promise.all(foodAndServingPromise);
