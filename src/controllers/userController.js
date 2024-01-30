@@ -66,8 +66,10 @@ class UserController{
   async addSurgarIntake(req, res){
     try{
       let {username, code, serving_count, date} = req.body;  
-      if(!date){
-        date = moment().tz("Pacific/Auckland").format()
+
+      const dateFormat = "YYYY-MM-DDTHH:mm:ssZ";
+      if (!moment(date, dateFormat, true).isValid()) {
+        date = moment().tz("Pacific/Auckland").format();
       }
       const result = await sugarIntakeService.addSugarIntake(username, code, serving_count, date);
       if (result.success == true) {

@@ -65,7 +65,7 @@ class SugarIntakeService {
         serving_count: serving_count,
         date: date,
       });
-      console.log(sugarIntake)
+      // console.log(sugarIntake)
       await sugarIntake.save();
       return{success: true}
     }catch(error){
